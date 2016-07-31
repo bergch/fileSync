@@ -42,7 +42,7 @@ public abstract class LocalEntry implements Entry {
 	}
 	
 	public String getRemoteFileName() {
-		return Main.REMOTE_DIRECTORY + file.getAbsolutePath().replace("\\", "/").replace(Main.localDir, "");
+		return Main.remoteDir + file.getAbsolutePath().replace("\\", "/").replace(Main.localDir, "");
 	}
 
 	public File getFile() {

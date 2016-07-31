@@ -21,10 +21,10 @@ import da_bubu.de.filesync.file.RemoteFile;
 
 public class Main {
 
-    public static final String REMOTE_DIRECTORY = "/var/www/owncloud/data/bubu/files/Photos";
-
-
     public static String localDir = null;
+
+    public static String remoteDir = null;
+
     public static File privateKey = null;
 
     public static void main(String[] args) throws Exception {
@@ -32,28 +32,30 @@ public class Main {
         Options options = new Options();
         options.addOption(CommandLineArguments.localPath, true, "local path");
         options.addOption(CommandLineArguments.pricateKeyPath, true, "path to private key");
-        
+        options.addOption(CommandLineArguments.removePath, true, "remote path");
+
         CommandLineParser parser = new DefaultParser();
-        CommandLine cmd = parser.parse( options, args);
-        
+        CommandLine cmd = parser.parse(options, args);
+
         localDir = cmd.getOptionValue(CommandLineArguments.localPath);
         privateKey = new File(cmd.getOptionValue(CommandLineArguments.pricateKeyPath));
+        remoteDir = cmd.getOptionValue(CommandLineArguments.removePath);
 
         Main main = new Main();
- 
+
         LocalDirectory local = main.listLocalFiles(localDir);
-        RemoteDirectory remote = main.listRemoteFiles(REMOTE_DIRECTORY);
+        RemoteDirectory remote = main.listRemoteFiles(remoteDir);
 
         List<LocalEntry> entriesToBeUploaded = new ArrayList<LocalEntry>();
 
         log("start diff remote and local");
         diff(local, remote, entriesToBeUploaded);
 
-        if(entriesToBeUploaded.size() == 0) {
+        if (entriesToBeUploaded.size() == 0) {
             log("nothing to do");
-        }else {
+        } else {
             logDiff(entriesToBeUploaded);
-            
+
             RemoteConnection.getInstance().upload(entriesToBeUploaded);
         }
         RemoteConnection.getInstance().shutdown();
@@ -61,7 +63,7 @@ public class Main {
 
     private static void logDiff(List<LocalEntry> entriesToBeUploaded) {
         for (LocalEntry localEntry : entriesToBeUploaded) {
-            log("to be uploaded:"+localEntry.getFullPath());
+            log("to be uploaded:" + localEntry.getFullPath());
             if (localEntry.isDirectory()) {
                 logDiff(((LocalDirectory) localEntry).getContent());
             }
@@ -72,17 +74,16 @@ public class Main {
     private static void diff(LocalDirectory local, RemoteEntry remote, List<LocalEntry> entriesToBeUploaded) {
         for (LocalEntry entry : local.getContent()) {
 
-            if (!isRemote(entry, ((RemoteDirectory)remote).getContent())) {
-                    entriesToBeUploaded.add(entry);
+            if (!isRemote(entry, ((RemoteDirectory) remote).getContent())) {
+                entriesToBeUploaded.add(entry);
             } else {
                 if (entry.isDirectory()) {
-                    diff((LocalDirectory) entry, (RemoteDirectory) getRemote(entry, ((RemoteDirectory)remote).getContent()),
-                            entriesToBeUploaded);
+                    diff((LocalDirectory) entry, (RemoteDirectory) getRemote(entry, ((RemoteDirectory) remote).getContent()), entriesToBeUploaded);
 
                 } else {
-                    if(entry.getLastModificationDate().compareTo(((RemoteFile)remote).getLastModificationDate()) < 0){
-                        log("updateing remote file:"+entry.getFullPath());
-                        //FIXME check diff of the lmd
+                    log("updateing remote file:" + entry.getFullPath()+", remote:"+remote.getFullPath());
+                    if (entry.getLastModificationDate().compareTo(((RemoteFile) remote).getLastModificationDate()) < 0) {
+                        // FIXME check diff of the lmd
                         entriesToBeUploaded.add(entry);
                     }
                 }
