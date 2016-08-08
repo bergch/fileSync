@@ -67,7 +67,7 @@ public abstract class RemoteEntry implements Entry {
 
 	@Override
 	public boolean isDirectory() {
-		return entry.getLongname().substring(0, 1).toLowerCase().equals("d");
+		return getParent() == null ||  entry.getLongname().substring(0, 1).toLowerCase().equals("d");
 	}
 
 	public static boolean isDir(LsEntry lsEntry) {

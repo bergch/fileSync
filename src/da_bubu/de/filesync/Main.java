@@ -73,19 +73,33 @@ public class Main {
 
     private static void diff(LocalDirectory local, RemoteEntry remote, List<LocalEntry> entriesToBeUploaded) {
         for (LocalEntry entry : local.getContent()) {
+            log("diff:" + entry.getFileName());
 
             if (!isRemote(entry, ((RemoteDirectory) remote).getContent())) {
+                log("add to be uploaded:" + entry.getFileName());
                 entriesToBeUploaded.add(entry);
             } else {
+//                log("local :" + entry.getFullPath() + "(" + ((entry != null) ? entry.isDirectory() : "") + ", "
+//                        + ((entry != null) ? entry.getClass() : "") + ")");
+//                log("remote:" + remote.getFullPath() + "(" + ((remote != null) ? remote.isDirectory() : "") + ", "
+//                        + ((remote != null) ? remote.getClass() : "") + ")");
                 if (entry.isDirectory()) {
                     diff((LocalDirectory) entry, (RemoteDirectory) getRemote(entry, ((RemoteDirectory) remote).getContent()), entriesToBeUploaded);
 
                 } else {
-                    log("updateing remote file:" + entry.getFullPath()+", remote:"+remote.getFullPath());
-                    if (entry.getLastModificationDate().compareTo(((RemoteFile) remote).getLastModificationDate()) < 0) {
-                        // FIXME check diff of the lmd
+//                    log("updateing remote file:" + entry.getFullPath() + ", remote:" + remote.getFullPath());
+                    boolean found = false;
+                    for (RemoteEntry remoteEntry : ((RemoteDirectory) remote).getContent()) {
+                        if (remoteEntry.getFileName().equals(entry.getFileName())){
+//                                && entry.getLastModificationDate().compareTo(remoteEntry.getLastModificationDate()) <= 0) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
                         entriesToBeUploaded.add(entry);
                     }
+
                 }
             }
         }
